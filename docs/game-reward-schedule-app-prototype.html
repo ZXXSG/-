@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>游戏奖励式日程计划 APP 原型</title>
+  <style>
+    :root {
+      --color-primary: #5d5fef;
+      --color-reward: #ffb547;
+      --color-bg: #f5f7fb;
+      --color-surface: #ffffff;
+      --color-text-primary: #1e2233;
+      --color-text-secondary: #6b7384;
+      --color-success: #4cd964;
+      --color-warning: #ff6b6b;
+      --radius-card: 16px;
+      --shadow-card: 0 8px 20px rgba(18, 21, 52, 0.06);
+      --motion-fast: 120ms ease-out;
+      --motion-medium: 240ms ease-in-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Noto Sans SC", "Roboto", system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--color-bg);
+      color: var(--color-text-primary);
+      display: flex;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .device-frame {
+      width: min(420px, 100%);
+      border-radius: 36px;
+      background: var(--color-bg);
+      box-shadow: 0 32px 64px rgba(18, 21, 52, 0.18);
+      overflow: hidden;
+      position: relative;
+    }
+
+    header {
+      padding: 24px 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .status-bar {
+      background: linear-gradient(135deg, #6f74ff, var(--color-primary));
+      color: #fff;
+      border-radius: 20px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      transition: transform var(--motion-fast);
+    }
+
+    .status-bar:hover {
+      transform: translateY(-2px);
+    }
+
+    .status-bar h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .status-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    main {
+      height: 640px;
+      background: var(--color-surface);
+      border-radius: 32px 32px 0 0;
+      padding: 16px 24px 96px;
+      box-shadow: inset 0 1px 0 rgba(18, 21, 52, 0.06);
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .segmented {
+      display: flex;
+      background: #ebedf7;
+      border-radius: 999px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+
+    .segmented button {
+      flex: 1;
+      border: none;
+      border-radius: 999px;
+      padding: 8px 0;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      background: transparent;
+      cursor: pointer;
+      transition: all var(--motion-fast);
+    }
+
+    .segmented button.active {
+      background: #fff;
+      color: var(--color-primary);
+      box-shadow: 0 6px 16px rgba(93, 95, 239, 0.25);
+      font-weight: 600;
+    }
+
+    .task-card {
+      background: #fff;
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .task-card::after {
+      content: "";
+      position: absolute;
+      right: -20px;
+      top: -20px;
+      width: 96px;
+      height: 96px;
+      background: radial-gradient(circle at center, rgba(255, 181, 71, 0.4), transparent 60%);
+      opacity: 0;
+      transition: opacity var(--motion-fast);
+    }
+
+    .task-card:hover::after {
+      opacity: 1;
+    }
+
+    .task-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .task-title h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .badge.reward {
+      background: var(--color-reward);
+      color: var(--color-text-primary);
+    }
+
+    .badge.difficulty {
+      background: linear-gradient(135deg, rgba(93, 95, 239, 0.7), var(--color-primary));
+    }
+
+    .task-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      align-items: center;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .task-actions button {
+      flex: 1;
+      border: none;
+      border-radius: 12px;
+      padding: 8px 0;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform var(--motion-fast);
+    }
+
+    .task-actions button.complete {
+      background: var(--color-success);
+      color: #fff;
+    }
+
+    .task-actions button.delay {
+      background: rgba(50, 197, 255, 0.15);
+      color: #119bd1;
+    }
+
+    .task-actions button.delete {
+      background: rgba(255, 107, 107, 0.15);
+      color: var(--color-warning);
+    }
+
+    .fab {
+      position: absolute;
+      bottom: 96px;
+      right: 24px;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 12px 30px rgba(93, 95, 239, 0.4);
+      cursor: pointer;
+      transition: transform var(--motion-fast);
+    }
+
+    .fab:hover {
+      transform: scale(1.05);
+    }
+
+    nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 88px;
+      background: #fff;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid rgba(18, 21, 52, 0.08);
+    }
+
+    nav button {
+      border: none;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      transition: color var(--motion-fast);
+      font-size: 12px;
+      padding-top: 4px;
+    }
+
+    nav button.active {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    nav button span.icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: rgba(93, 95, 239, 0.12);
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+
+    nav button.active span.icon {
+      background: rgba(93, 95, 239, 0.2);
+    }
+
+    .screen {
+      display: none;
+      animation: fade var(--motion-medium);
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fade {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(30, 34, 51, 0.4);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 24px;
+      z-index: 10;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+      animation: fade var(--motion-medium);
+    }
+
+    .modal {
+      width: 100%;
+      background: #fff;
+      border-radius: 28px 28px 0 0;
+      padding: 24px;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: slideUp var(--motion-medium);
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(40px);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .modal header {
+      padding: 0 0 16px;
+    }
+
+    .modal header h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .modal footer {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(93, 95, 239, 0.12);
+      font-size: 12px;
+      margin-right: 8px;
+      margin-top: 6px;
+    }
+
+    .list-card {
+      background: #fff;
+      border-radius: var(--radius-card);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 16px;
+    }
+
+    .list-card h4 {
+      margin: 0 0 8px;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .timeline-item strong {
+      color: var(--color-text-primary);
+    }
+
+    .progress {
+      height: 8px;
+      background: rgba(93, 95, 239, 0.16);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(135deg, #ffcd76, var(--color-reward));
+    }
+
+    .insight-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .insight-grid .list-card {
+      margin: 0;
+    }
+
+    .profile-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .profile-item {
+      background: #fff;
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      background: rgba(93, 95, 239, 0.08);
+      border-radius: 24px;
+      color: var(--color-text-secondary);
+    }
+
+    .coin-burst {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .coin {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #fff4d5, var(--color-reward));
+      box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.2);
+      animation: coinFall var(--motion-medium) forwards;
+    }
+
+    @keyframes coinFall {
+      from {
+        opacity: 1;
+        transform: translateY(-10px) scale(0.9);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-60px) scale(1.4);
+      }
+    }
+
+    .toast {
+      position: absolute;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-surface);
+      padding: 12px 20px;
+      border-radius: 999px;
+      box-shadow: 0 10px 24px rgba(18, 21, 52, 0.18);
+      display: none;
+      align-items: center;
+      gap: 12px;
+      z-index: 20;
+    }
+
+    .toast.active {
+      display: flex;
+      animation: fade var(--motion-medium);
+    }
+  </style>
+</head>
+<body>
+  <div class="device-frame">
+    <div class="toast" id="toast">
+      <span>🎉 奖励已到账，+40 金币！</span>
+    </div>
+    <header>
+      <div class="status-bar" id="statusBar">
+        <div>
+          <h2>你好，晨光！</h2>
+          <div class="status-meta">
+            <span>金币余额：<strong>320</strong></span>
+            <span>连续完成：<strong>7 天</strong></span>
+          </div>
+        </div>
+        <div>
+          <strong>兑换目标 65%</strong>
+          <div class="progress"><span style="width: 65%"></span></div>
+        </div>
+      </div>
+      <div class="segmented" id="segment">
+        <button class="active" data-filter="all">全部任务</button>
+        <button data-filter="priority">高优先级</button>
+        <button data-filter="done">已完成</button>
+      </div>
+    </header>
+    <main>
+      <section class="screen active" id="screen-home">
+        <article class="task-card" data-id="task-1">
+          <div class="task-title">
+            <h3>晨间跑步 5km</h3>
+            <span class="badge difficulty">高难度</span>
+          </div>
+          <div class="task-meta">
+            <span>06:30 - 07:15</span>
+            <span class="badge reward">+40 金币</span>
+          </div>
+          <p class="task-desc">坚持完成晨跑，解锁耐力勋章进度。</p>
+          <div class="task-actions">
+            <button class="complete" data-complete>完成</button>
+            <button class="delay">延后</button>
+            <button class="delete">删除</button>
+          </div>
+          <div class="coin-burst"></div>
+        </article>
+        <article class="task-card" data-id="task-2">
+          <div class="task-title">
+            <h3>工作周报整理</h3>
+            <span class="badge difficulty">中难度</span>
+          </div>
+          <div class="task-meta">
+            <span>09:30 - 10:00</span>
+            <span class="badge reward">+25 金币</span>
+          </div>
+          <p class="task-desc">总结本周项目进度，更新里程碑。</p>
+          <div class="task-actions">
+            <button class="complete" data-complete>完成</button>
+            <button class="delay">延后</button>
+            <button class="delete">删除</button>
+          </div>
+          <div class="coin-burst"></div>
+        </article>
+        <article class="task-card" data-id="task-3">
+          <div class="task-title">
+            <h3>阅读 30 分钟</h3>
+            <span class="badge difficulty">低难度</span>
+          </div>
+          <div class="task-meta">
+            <span>21:00 - 21:30</span>
+            <span class="badge reward">+15 金币</span>
+          </div>
+          <p class="task-desc">阅读《深度工作》一章，记录 3 条行动点。</p>
+          <div class="task-actions">
+            <button class="complete" data-complete>完成</button>
+            <button class="delay">延后</button>
+            <button class="delete">删除</button>
+          </div>
+          <div class="coin-burst"></div>
+        </article>
+      </section>
+
+      <section class="screen" id="screen-rewards">
+        <div class="list-card">
+          <h4>兑换目标</h4>
+          <p><strong>蓝牙耳机</strong> · 目标金额 ¥499</p>
+          <div class="progress"><span style="width: 65%"></span></div>
+          <small>预计达成：8 月 28 日 · 金币余额 320 / 499</small>
+        </div>
+        <div class="list-card">
+          <h4>金币流水</h4>
+          <div class="timeline">
+            <div class="timeline-item">
+              <span>今天</span>
+              <strong>晨间跑步</strong>
+              <span style="color: var(--color-reward)">+40</span>
+            </div>
+            <div class="timeline-item">
+              <span>今天</span>
+              <strong>签到奖励</strong>
+              <span style="color: var(--color-reward)">+10</span>
+            </div>
+            <div class="timeline-item">
+              <span>昨天</span>
+              <strong>兑换咖啡</strong>
+              <span style="color: var(--color-warning)">-30</span>
+            </div>
+          </div>
+        </div>
+        <div class="list-card">
+          <h4>签到 streak</h4>
+          <div class="empty-state">
+            <p>今日已签到 🎉 连续 7 天</p>
+            <p>距离连签礼包还差 3 天</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-insights">
+        <div class="segmented" style="margin-top:0">
+          <button class="active">周数据</button>
+          <button>月数据</button>
+          <button>年数据</button>
+        </div>
+        <div class="insight-grid">
+          <div class="list-card">
+            <h4>完成率走势</h4>
+            <p>本周平均完成率 <strong>86%</strong>，连续 3 天超过 90%。</p>
+            <div class="progress"><span style="width: 86%"></span></div>
+          </div>
+          <div class="list-card">
+            <h4>任务分类</h4>
+            <p>学习 35% · 健身 30% · 工作 25% · 生活 10%</p>
+            <div class="chip">学习 ↑ 5%</div>
+            <div class="chip">健身 新增 streak</div>
+          </div>
+          <div class="list-card">
+            <h4>金币收支</h4>
+            <p>收入 215 · 支出 60 · 余额 320</p>
+          </div>
+          <div class="list-card">
+            <h4>成就墙</h4>
+            <p>已解锁：耐力勋章、专注达人</p>
+            <div class="chip">下一个：专注 14 天</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-profile">
+        <div class="list-card" style="text-align:center">
+          <img src="https://dummyimage.com/96x96/5d5fef/ffffff&text=CG" alt="avatar" style="width:96px;height:96px;border-radius:50%;box-shadow:var(--shadow-card);margin-bottom:12px;" />
+          <h3 style="margin:0">晨光</h3>
+          <p style="margin:4px 0;color:var(--color-text-secondary)">等级 Lv.5 · 连续完成 7 天</p>
+          <div class="chip">AI 建议 · 内测资格排队中</div>
+        </div>
+        <div class="profile-list">
+          <div class="profile-item">账号安全 <span>›</span></div>
+          <div class="profile-item">通知偏好 <span>›</span></div>
+          <div class="profile-item" id="themeToggle">颜色主题 · 浅色 <span>›</span></div>
+          <div class="profile-item">奖励规则说明 <span>›</span></div>
+          <div class="profile-item">反馈与帮助 <span>›</span></div>
+        </div>
+      </section>
+    </main>
+
+    <div class="fab" id="fab">＋</div>
+
+    <nav id="bottomNav">
+      <button class="active" data-target="home">
+        <span class="icon">🏠</span>
+        首页
+      </button>
+      <button data-target="rewards">
+        <span class="icon">💰</span>
+        奖励
+      </button>
+      <button data-target="insights">
+        <span class="icon">📈</span>
+        统计
+      </button>
+      <button data-target="profile">
+        <span class="icon">👤</span>
+        我的
+      </button>
+    </nav>
+
+    <div class="modal-backdrop" id="taskDetail">
+      <div class="modal">
+        <header>
+          <h3 id="detailTitle">任务详情</h3>
+          <p id="detailTime">06:30 - 07:15 · 预计奖励 40 金币</p>
+        </header>
+        <section>
+          <p id="detailDescription">坚持完成晨跑，解锁耐力勋章进度。</p>
+          <div>
+            <strong>奖励算法</strong>
+            <p>基础奖励 20 + 难度系数 1.5 × streak 加成 1.2 = 36 → 向上取整 40 金币。</p>
+          </div>
+          <div style="margin-top:16px;">
+            <strong>提醒设置</strong>
+            <p>提前 15 分钟推送 · 语音播报</p>
+          </div>
+        </section>
+        <footer>
+          <button class="task-actions button delay" data-close>稍后再看</button>
+          <button class="task-actions button complete" data-complete-modal>立即完成</button>
+        </footer>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="createTask">
+      <div class="modal">
+        <header>
+          <h3>创建新任务</h3>
+          <p>快速设置标题、时间段与奖励系数。</p>
+        </header>
+        <section>
+          <label style="display:block;margin-bottom:12px;">
+            标题
+            <input type="text" placeholder="例如：晚上拉伸 15 分钟" style="width:100%;margin-top:6px;padding:10px 14px;border-radius:14px;border:1px solid rgba(18,21,52,0.08);" />
+          </label>
+          <label style="display:block;margin-bottom:12px;">
+            时间段
+            <input type="text" placeholder="21:30 - 21:45" style="width:100%;margin-top:6px;padding:10px 14px;border-radius:14px;border:1px solid rgba(18,21,52,0.08);" />
+          </label>
+          <label style="display:block;margin-bottom:12px;">
+            奖励预览
+            <div class="progress" style="margin-top:6px;height:12px;">
+              <span style="width:45%;background:linear-gradient(135deg,#5d5fef,#9fa1ff);"></span>
+            </div>
+            <small>预计奖励 30 金币，可根据难度调整。</small>
+          </label>
+        </section>
+        <footer>
+          <button class="task-actions button delay" data-close>取消</button>
+          <button class="task-actions button complete" data-close>保存任务</button>
+        </footer>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="rewardDetail">
+      <div class="modal">
+        <header>
+          <h3>兑换目标详情</h3>
+          <p>蓝牙耳机 · 目标金额 ¥499</p>
+        </header>
+        <section>
+          <p>金币余额 320 · 还差 179 金币可兑换。</p>
+          <div class="progress"><span style="width: 65%"></span></div>
+          <div class="chip">预计达成：8 月 28 日</div>
+          <div class="chip">连续完成 3 天可额外 +30 金币</div>
+        </section>
+        <footer>
+          <button class="task-actions button delay" data-close>设置提醒</button>
+          <button class="task-actions button complete" data-close>标记已兑换</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const navButtons = document.querySelectorAll('nav button');
+    const screens = {
+      home: document.getElementById('screen-home'),
+      rewards: document.getElementById('screen-rewards'),
+      insights: document.getElementById('screen-insights'),
+      profile: document.getElementById('screen-profile')
+    };
+
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        navButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const target = btn.dataset.target;
+        Object.values(screens).forEach(screen => screen.classList.remove('active'));
+        screens[target].classList.add('active');
+      });
+    });
+
+    const segmentButtons = document.querySelectorAll('#segment button');
+    segmentButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        segmentButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    const taskCards = document.querySelectorAll('.task-card');
+    const taskDetail = document.getElementById('taskDetail');
+    const detailTitle = document.getElementById('detailTitle');
+    const detailTime = document.getElementById('detailTime');
+    const detailDescription = document.getElementById('detailDescription');
+
+    taskCards.forEach(card => {
+      card.addEventListener('click', event => {
+        if (event.target.closest('button')) return; // avoid opening when clicking buttons
+        openTaskDetail(card);
+      });
+
+      const completeBtn = card.querySelector('[data-complete]');
+      completeBtn.addEventListener('click', event => {
+        event.stopPropagation();
+        triggerCompletion(card);
+      });
+    });
+
+    function openTaskDetail(card) {
+      detailTitle.textContent = card.querySelector('h3').textContent;
+      const time = card.querySelector('.task-meta span').textContent;
+      const reward = card.querySelector('.badge.reward').textContent;
+      detailTime.textContent = `${time} · 预计奖励 ${reward}`;
+      detailDescription.textContent = card.querySelector('.task-desc').textContent;
+      taskDetail.classList.add('active');
+    }
+
+    function closeModal(modal) {
+      modal.classList.remove('active');
+    }
+
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', () => closeModal(btn.closest('.modal-backdrop')));
+    });
+
+    taskDetail.addEventListener('click', event => {
+      if (event.target === taskDetail) closeModal(taskDetail);
+    });
+
+    const createTask = document.getElementById('createTask');
+    const fab = document.getElementById('fab');
+    fab.addEventListener('click', () => {
+      createTask.classList.add('active');
+    });
+
+    createTask.addEventListener('click', event => {
+      if (event.target === createTask) closeModal(createTask);
+    });
+
+    const rewardDetail = document.getElementById('rewardDetail');
+    document.getElementById('statusBar').addEventListener('click', () => {
+      rewardDetail.classList.add('active');
+      Object.values(screens).forEach(screen => screen.classList.remove('active'));
+      screens.rewards.classList.add('active');
+      navButtons.forEach(b => b.classList.remove('active'));
+      navButtons[1].classList.add('active');
+    });
+
+    rewardDetail.addEventListener('click', event => {
+      if (event.target === rewardDetail) closeModal(rewardDetail);
+    });
+
+    const toast = document.getElementById('toast');
+
+    function triggerCompletion(card) {
+      const burst = card.querySelector('.coin-burst');
+      burst.innerHTML = '';
+      for (let i = 0; i < 6; i++) {
+        const coin = document.createElement('span');
+        coin.classList.add('coin');
+        coin.style.left = `${50 + (Math.random() - 0.5) * 80}%`;
+        coin.style.bottom = `${10 + i * 6}px`;
+        burst.appendChild(coin);
+      }
+      toast.classList.add('active');
+      setTimeout(() => toast.classList.remove('active'), 2000);
+    }
+
+    document.querySelector('[data-complete-modal]').addEventListener('click', () => {
+      triggerCompletion(document.querySelector('[data-id="task-1"]'));
+      closeModal(taskDetail);
+    });
+
+    const themeToggle = document.getElementById('themeToggle');
+    let darkMode = false;
+    themeToggle.addEventListener('click', () => {
+      darkMode = !darkMode;
+      document.body.classList.toggle('dark', darkMode);
+      themeToggle.innerHTML = `颜色主题 · ${darkMode ? '深色' : '浅色'} <span>›</span>`;
+      applyTheme();
+    });
+
+    function applyTheme() {
+      if (document.body.classList.contains('dark')) {
+        document.documentElement.style.setProperty('--color-bg', '#1b1d2a');
+        document.documentElement.style.setProperty('--color-surface', '#26293a');
+        document.documentElement.style.setProperty('--color-text-primary', '#f5f7fb');
+        document.documentElement.style.setProperty('--color-text-secondary', '#a8b0c3');
+      } else {
+        document.documentElement.style.setProperty('--color-bg', '#f5f7fb');
+        document.documentElement.style.setProperty('--color-surface', '#ffffff');
+        document.documentElement.style.setProperty('--color-text-primary', '#1e2233');
+        document.documentElement.style.setProperty('--color-text-secondary', '#6b7384');
+      }
+    }
+  </script>
+</body>
+</html>
